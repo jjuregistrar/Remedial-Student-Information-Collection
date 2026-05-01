@@ -1,13 +1,12 @@
-Here is an HTML document that implements a password-protected admin panel, allowing only you to securely open or close the data submission form.
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Student Info Collection - Jigjiga University</title>
+  <title>Student Information Collection - Jigjiga University</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    /* [Your existing CSS here - keeping same styles] */
     :root {
       --primary: #6366f1;
       --primary-dark: #4f46e5;
@@ -92,7 +91,7 @@ Here is an HTML document that implements a password-protected admin panel, allow
 
     .header p { color: rgba(255, 255, 255, 0.9); }
 
-    /* Admin panel with password protection */
+    /* Admin panel */
     .admin-panel {
       background: rgba(255, 255, 255, 0.98);
       border-radius: var(--radius);
@@ -424,7 +423,6 @@ Here is an HTML document that implements a password-protected admin panel, allow
       to { transform: rotate(360deg); }
     }
 
-    /* Message Blocks */
     .message-container {
       position: fixed;
       top: 20px;
@@ -530,7 +528,7 @@ Here is an HTML document that implements a password-protected admin panel, allow
       <p>Please verify your identity and provide additional information</p>
     </div>
 
-    <!-- Admin Panel - Password Protected -->
+    <!-- Admin Panel -->
     <div class="admin-panel" id="adminPanel">
       <div class="admin-header">
         <div class="admin-title">
@@ -547,6 +545,9 @@ Here is an HTML document that implements a password-protected admin panel, allow
             <span class="slider"></span>
           </label>
           <span id="statusBadge" class="status-badge">CLOSED</span>
+          <span style="font-size: 12px; color: #475569;">
+            <i class="fas fa-globe"></i> Affects ALL users
+          </span>
         </div>
         <button id="logoutBtn" class="admin-btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </div>
@@ -561,7 +562,7 @@ Here is an HTML document that implements a password-protected admin panel, allow
       <i class="fas fa-ban"></i>
       <div class="banner-text">
         <strong>⚠️ Data Submission is Closed</strong><br>
-        The registration period has ended. Please contact the Registrar's office for assistance.
+        The registration period has ended.
       </div>
     </div>
 
@@ -605,16 +606,19 @@ Here is an HTML document that implements a password-protected admin panel, allow
   </div>
 
   <script>
-    // ==================== SECURE ADMIN CONFIGURATION ====================
-    // *** CHANGE THIS PASSWORD TO YOUR SECRET ONE ***
-    const ADMIN_SECRET_PASSWORD = "Admin@Jigjiga2025";  // 🔐 Only you know this
+    // ==================== GLOBAL SUBMISSION STATUS ====================
+    // This key is used by ALL users to read/write the submission status
+    const GLOBAL_STATUS_KEY = 'JIGJIGA_UNIVERSITY_SUBMISSION_STATUS';
     
-    // Session state: is admin authenticated?
+    // Admin password (CHANGE THIS)
+    const ADMIN_SECRET_PASSWORD = "Admin@Jigjiga2025";
+    
+    // Global variable - this is the SINGLE SOURCE OF TRUTH for ALL users
+    let isSubmissionOpen = false;
     let adminAuthenticated = false;
-    let isSubmissionOpen = false;   // default CLOSED on first load
     
     // Data variables
-    const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/jjuregistrar/data-collection-form/refs/heads/main/students.csv?token=GHSAT0AAAAAAD3SR7XHL23LJ2WHXCOBN7HO2PUNRWQ';
+    const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/jjuregistrar/data-collection-form/refs/heads/main/students.csv';
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfc5gNpThsP96UL4Pnm5oRW1Fu1Gw9Tjv19Q8uupj1y4y7u3qmwXM0VUnyO2qRjCg/exec';
     
     let studentsData = [];
@@ -644,6 +648,80 @@ Here is an HTML document that implements a password-protected admin panel, allow
     const authBtn = document.getElementById('authBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     
+    // ==================== GLOBAL STATUS FUNCTIONS ====================
+    
+    // Read global status from localStorage (ALL users read from the SAME key)
+    function loadGlobalStatus() {
+      const savedStatus = localStorage.getItem(GLOBAL_STATUS_KEY);
+      if (savedStatus === 'true') {
+        isSubmissionOpen = true;
+      } else if (savedStatus === 'false') {
+        isSubmissionOpen = false;
+      } else {
+        // Default: CLOSED on first load for everyone
+        isSubmissionOpen = false;
+        localStorage.setItem(GLOBAL_STATUS_KEY, 'false');
+      }
+      console.log(`[Global Status] Loaded: ${isSubmissionOpen ? 'OPEN' : 'CLOSED'}`);
+      return isSubmissionOpen;
+    }
+    
+    // Save global status (ONLY admin can call this)
+    function saveGlobalStatus(openState) {
+      isSubmissionOpen = openState;
+      localStorage.setItem(GLOBAL_STATUS_KEY, openState ? 'true' : 'false');
+      console.log(`[Global Status] SAVED: ${openState ? 'OPEN' : 'CLOSED'} - This affects ALL users!`);
+      return isSubmissionOpen;
+    }
+    
+    // Update UI based on global status (same for ALL users)
+    function updateGlobalUI() {
+      if (isSubmissionOpen) {
+        statusBadge.textContent = 'OPEN';
+        statusBadge.classList.add('open');
+        statusBadge.style.background = '#dcfce7';
+        statusBadge.style.color = '#15803d';
+        closedBanner.style.display = 'none';
+        mainFormContainer.classList.remove('disabled-overlay');
+      } else {
+        statusBadge.textContent = 'CLOSED';
+        statusBadge.classList.remove('open');
+        statusBadge.style.background = '#fee2e2';
+        statusBadge.style.color = '#b91c1c';
+        closedBanner.style.display = 'flex';
+        mainFormContainer.classList.add('disabled-overlay');
+      }
+      
+      // Update toggle if admin is authenticated
+      if (adminAuthenticated) {
+        submissionToggle.checked = isSubmissionOpen;
+        submissionToggle.disabled = false;
+      } else {
+        submissionToggle.disabled = true;
+      }
+    }
+    
+    // Admin function to change global status
+    function setGlobalSubmissionState(openState) {
+      if (!adminAuthenticated) {
+        showFloatingMessage('Access Denied', 'Only admin can change submission status', 'error', 3000);
+        return false;
+      }
+      
+      saveGlobalStatus(openState);
+      updateGlobalUI();
+      
+      // Notify admin of the change
+      showFloatingMessage(
+        openState ? '✅ Submission OPENED' : '🔒 Submission CLOSED',
+        openState ? 'All users can now submit data' : 'No one can submit data until you reopen',
+        openState ? 'success' : 'warning',
+        5000
+      );
+      
+      return true;
+    }
+    
     // ==================== Helper Functions ====================
     function showFloatingMessage(title, message, type = 'success', duration = 5000) {
       const messageId = Date.now() + Math.random();
@@ -667,63 +745,24 @@ Here is an HTML document that implements a password-protected admin panel, allow
       }, duration);
     }
     
-    function updateSubmissionUI() {
-      // Only admin can see/use toggle, but UI reflects current state for everyone
-      if (adminAuthenticated) {
-        submissionToggle.disabled = false;
-        submissionToggle.checked = isSubmissionOpen;
-      } else {
-        submissionToggle.disabled = true;
-      }
-      
-      if (isSubmissionOpen) {
-        statusBadge.textContent = 'OPEN';
-        statusBadge.classList.add('open');
-        statusBadge.style.background = '#dcfce7';
-        statusBadge.style.color = '#15803d';
-        closedBanner.style.display = 'none';
-        mainFormContainer.classList.remove('disabled-overlay');
-      } else {
-        statusBadge.textContent = 'CLOSED';
-        statusBadge.classList.remove('open');
-        statusBadge.style.background = '#fee2e2';
-        statusBadge.style.color = '#b91c1c';
-        closedBanner.style.display = 'flex';
-        mainFormContainer.classList.add('disabled-overlay');
-      }
-    }
-    
-    function setSubmissionState(openState) {
-      if (!adminAuthenticated) return;
-      isSubmissionOpen = openState;
-      // Persist state in localStorage (encrypted simple, but only admin can change via auth)
-      localStorage.setItem('jju_submission_open', openState ? 'true' : 'false');
-      updateSubmissionUI();
-      showFloatingMessage(openState ? 'Submission Opened' : 'Submission Closed', 
-        openState ? 'Data collection is now OPEN. Students can submit.' : 'Data submission has been CLOSED.', 
-        openState ? 'success' : 'warning', 4000);
-    }
-    
     // Admin authentication
     function authenticateAdmin() {
       const enteredPassword = passwordInput.value.trim();
       if (enteredPassword === ADMIN_SECRET_PASSWORD) {
         adminAuthenticated = true;
-        // Restore stored submission state from localStorage (only admin can read/write)
-        const stored = localStorage.getItem('jju_submission_open');
-        if (stored !== null) {
-          isSubmissionOpen = stored === 'true';
-        } else {
-          isSubmissionOpen = false; // default closed
-        }
-        updateSubmissionUI();
+        
+        // Reload current global status
+        loadGlobalStatus();
+        updateGlobalUI();
+        
         // Show admin controls
         adminControls.classList.add('show');
         adminLockStatus.innerHTML = '<i class="fas fa-unlock-alt"></i> Admin Mode (Authenticated)';
         adminLockStatus.style.background = '#dcfce7';
         adminLockStatus.style.color = '#15803d';
         document.getElementById('passwordSection').style.display = 'none';
-        showFloatingMessage('Access Granted', 'You can now open/close the submission system.', 'success', 4000);
+        
+        showFloatingMessage('Access Granted', 'You can now open/close the submission system for ALL users.', 'success', 4000);
         passwordInput.value = '';
       } else {
         showFloatingMessage('Access Denied', 'Invalid admin password.', 'error', 3000);
@@ -738,13 +777,14 @@ Here is an HTML document that implements a password-protected admin panel, allow
       adminLockStatus.style.background = '#f1f5f9';
       adminLockStatus.style.color = '#475569';
       document.getElementById('passwordSection').style.display = 'flex';
-      // Reset submission UI to reflect closed state (non-admin sees closed)
-      isSubmissionOpen = false;
-      updateSubmissionUI();
-      showFloatingMessage('Logged Out', 'Admin session ended. Submission remains closed.', 'info', 3000);
+      
+      // UI remains showing current global status (doesn't change)
+      updateGlobalUI();
+      
+      showFloatingMessage('Logged Out', 'Admin session ended. Submission status remains unchanged.', 'info', 3000);
     }
     
-    // Data functions
+    // Data loading functions
     async function loadStudentData() {
       try {
         let response = await fetch(GITHUB_DATA_URL);
@@ -756,7 +796,9 @@ Here is an HTML document that implements a password-protected admin panel, allow
           studentsData = JSON.parse(data);
         }
         dataLoaded = true;
+        console.log(`Loaded ${studentsData.length} student records`);
       } catch (error) {
+        console.error('Error loading student data:', error);
         loadSampleData();
       }
     }
@@ -807,10 +849,13 @@ Here is an HTML document that implements a password-protected admin panel, allow
     }
     
     async function submitData() {
+      // Check GLOBAL submission status - this affects EVERYONE
       if (!isSubmissionOpen) {
         showFloatingMessage('Submission Closed', 'Data submission is currently closed. Please contact registrar.', 'error', 5000);
+        showResponse('❌ Submission is CLOSED. No submissions accepted at this time.', 'error');
         return;
       }
+      
       const fanNumber = fanNumberInput.value.trim();
       const phoneNumber = phoneNumberInput.value.trim();
       if (!/^\d{16}$/.test(fanNumber)) { showFieldError('fanNumberError', 'FAN Number: exactly 16 digits'); showFloatingMessage('Invalid FAN', 'Must be 16 digits', 'error', 3000); return; }
@@ -831,6 +876,7 @@ Here is an HTML document that implements a password-protected admin panel, allow
         Object.keys(submissionData).forEach(k => formData.append(k, submissionData[k]));
         await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: formData });
         showFloatingMessage('Success', 'Information submitted successfully!', 'success', 6000);
+        showResponse('✅ Thank you! Your information has been submitted.', 'success');
         setTimeout(() => resetForm(), 3000);
       } catch(e) { showFloatingMessage('Error', 'Network error, please try again', 'error', 4000); }
       finally { showLoading(false); submitBtn.disabled = false; }
@@ -858,7 +904,11 @@ Here is an HTML document that implements a password-protected admin panel, allow
     // Event binding
     verifyBtn.addEventListener('click', verifyStudent);
     submitBtn.addEventListener('click', submitData);
-    submissionToggle.addEventListener('change', (e) => { if(adminAuthenticated) setSubmissionState(e.target.checked); });
+    submissionToggle.addEventListener('change', (e) => { 
+      if(adminAuthenticated) {
+        setGlobalSubmissionState(e.target.checked);
+      }
+    });
     authBtn.addEventListener('click', authenticateAdmin);
     logoutBtn.addEventListener('click', logoutAdmin);
     adminLockStatus.addEventListener('click', () => { if(!adminAuthenticated) document.getElementById('passwordSection').style.display = 'flex'; });
@@ -867,16 +917,24 @@ Here is an HTML document that implements a password-protected admin panel, allow
     [fanNumberInput, phoneNumberInput].forEach(inp => inp.addEventListener('keypress', e => { if(e.key === 'Enter') submitData(); }));
     
     async function init() {
+      // Load global status FIRST (affects all users)
+      loadGlobalStatus();
+      
       await loadStudentData();
       setupRealTimeValidation();
-      // Default state: submission closed, admin not authenticated
-      adminAuthenticated = false;
-      isSubmissionOpen = false;
-      updateSubmissionUI();
-      showFloatingMessage('System Ready', 'Data submission is currently CLOSED. Only authorized admin can open.', 'info', 5000);
+      
+      // Update UI based on global status
+      updateGlobalUI();
+      
+      // Show appropriate welcome message
+      if (isSubmissionOpen) {
+        showFloatingMessage('System Open', 'Data submission is currently OPEN for all students.', 'success', 4000);
+      } else {
+        showFloatingMessage('System Closed', 'Data submission is currently CLOSED.', 'info', 4000);
+      }
     }
+    
     init();
   </script>
 </body>
 </html>
-```
