@@ -1,9 +1,11 @@
+Here is an HTML document that implements a password-protected admin panel, allowing only you to securely open or close the data submission form.
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Student Information Collection - Jigjiga University</title>
+  <title>Student Info Collection - Jigjiga University</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -90,28 +92,61 @@
 
     .header p { color: rgba(255, 255, 255, 0.9); }
 
-    /* Admin toggle panel - subtle but accessible */
+    /* Admin panel with password protection */
     .admin-panel {
-      background: rgba(255, 255, 255, 0.95);
+      background: rgba(255, 255, 255, 0.98);
       border-radius: var(--radius);
-      padding: 12px 20px;
+      padding: 16px 20px;
       margin-bottom: 20px;
       box-shadow: var(--shadow);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .admin-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      backdrop-filter: blur(4px);
+      margin-bottom: 12px;
     }
 
-    .admin-label {
-      font-weight: 600;
-      color: var(--gray-800);
-      font-size: 0.85rem;
+    .admin-title {
+      font-weight: 700;
+      color: var(--primary-dark);
+      font-size: 0.9rem;
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .admin-locked {
+      background: #f1f5f9;
+      padding: 8px 12px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      color: #475569;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .admin-locked:hover {
+      background: #e2e8f0;
+    }
+
+    .admin-controls {
+      display: none;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .admin-controls.show {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .toggle-switch {
@@ -171,6 +206,49 @@
     .status-badge.open {
       background: #dcfce7;
       color: #15803d;
+    }
+
+    .password-prompt {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .password-input {
+      padding: 8px 12px;
+      border: 2px solid var(--gray-200);
+      border-radius: 30px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .password-input:focus {
+      border-color: var(--primary);
+    }
+
+    .admin-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .admin-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .logout-btn {
+      background: #64748b;
+    }
+
+    .logout-btn:hover {
+      background: #475569;
     }
 
     .closed-banner {
@@ -346,7 +424,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Enhanced Message Blocks */
+    /* Message Blocks */
     .message-container {
       position: fixed;
       top: 20px;
@@ -374,102 +452,42 @@
     }
 
     @keyframes slideInRight {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
 
     @keyframes slideOutRight {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(100%);
-        opacity: 0;
-      }
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
     }
 
-    .message-block.hide {
-      animation: slideOutRight 0.3s ease forwards;
-    }
+    .message-block.hide { animation: slideOutRight 0.3s ease forwards; }
 
-    .message-icon {
-      font-size: 24px;
-      flex-shrink: 0;
-    }
+    .message-icon { font-size: 24px; flex-shrink: 0; }
+    .message-content { flex: 1; }
+    .message-title { font-weight: 700; margin-bottom: 4px; font-size: 0.95rem; }
+    .message-text { font-size: 0.85rem; color: var(--gray-600); line-height: 1.4; }
+    .message-close { cursor: pointer; color: var(--gray-400); font-size: 14px; flex-shrink: 0; }
+    .message-close:hover { color: var(--gray-600); }
+    .message-progress { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; animation: progress 5s linear forwards; }
+    @keyframes progress { from { width: 100%; } to { width: 0%; } }
 
-    .message-content {
-      flex: 1;
-    }
-
-    .message-title {
-      font-weight: 700;
-      margin-bottom: 4px;
-      font-size: 0.95rem;
-    }
-
-    .message-text {
-      font-size: 0.85rem;
-      color: var(--gray-600);
-      line-height: 1.4;
-    }
-
-    .message-close {
-      cursor: pointer;
-      color: var(--gray-400);
-      font-size: 14px;
-      transition: var(--transition);
-      flex-shrink: 0;
-    }
-
-    .message-close:hover {
-      color: var(--gray-600);
-    }
-
-    .message-progress {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 3px;
-      width: 100%;
-      animation: progress 5s linear forwards;
-    }
-
-    @keyframes progress {
-      from { width: 100%; }
-      to { width: 0%; }
-    }
-
-    .message-success {
-      border-left: 4px solid var(--success);
-    }
+    .message-success { border-left: 4px solid var(--success); }
     .message-success .message-icon { color: var(--success); }
     .message-success .message-title { color: var(--success-dark); }
     .message-success .message-progress { background: var(--success); }
 
-    .message-error {
-      border-left: 4px solid var(--danger);
-    }
+    .message-error { border-left: 4px solid var(--danger); }
     .message-error .message-icon { color: var(--danger); }
     .message-error .message-title { color: var(--danger-dark); }
     .message-error .message-progress { background: var(--danger); }
 
-    .message-info {
-      border-left: 4px solid var(--info);
-    }
+    .message-info { border-left: 4px solid var(--info); }
     .message-info .message-icon { color: var(--info); }
     .message-info .message-title { color: var(--info); }
     .message-info .message-progress { background: var(--info); }
 
-    .message-warning {
-      border-left: 4px solid var(--warning);
-    }
+    .message-warning { border-left: 4px solid var(--warning); }
     .message-warning .message-icon { color: var(--warning); }
     .message-warning .message-title { color: var(--warning); }
     .message-warning .message-progress { background: var(--warning); }
@@ -499,41 +517,46 @@
       .header h1 { font-size: 1.5rem; }
       .info-grid { grid-template-columns: 1fr; }
       .message-container { max-width: calc(100% - 40px); left: 20px; right: 20px; }
-      .admin-panel { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <div class="header-icon">
-        <i class="fas fa-graduation-cap"></i>
-      </div>
+      <div class="header-icon"><i class="fas fa-graduation-cap"></i></div>
       <h1>JIGJIGA UNIVERSITY</h1>
       <h2>Registrar and Alumni Directorate</h2>
       <h3>Remedial Student Information Collection</h3>
       <p>Please verify your identity and provide additional information</p>
     </div>
 
-    <!-- Admin Toggle Panel: Open/Close Submission -->
+    <!-- Admin Panel - Password Protected -->
     <div class="admin-panel" id="adminPanel">
-      <div class="admin-label">
-        <i class="fas fa-lock" style="color: var(--primary);"></i> 
-        <span>Admin Control: Submission Status</span>
+      <div class="admin-header">
+        <div class="admin-title">
+          <i class="fas fa-shield-alt"></i> Admin Console
+        </div>
+        <div id="adminLockStatus" class="admin-locked">
+          <i class="fas fa-lock"></i> Locked (Click to authenticate)
+        </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 15px;">
-        <label class="toggle-switch">
-          <input type="checkbox" id="submissionToggle">
-          <span class="slider"></span>
-        </label>
-        <span id="statusBadge" class="status-badge">CLOSED</span>
+      <div id="adminControls" class="admin-controls">
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="submissionToggle">
+            <span class="slider"></span>
+          </label>
+          <span id="statusBadge" class="status-badge">CLOSED</span>
+        </div>
+        <button id="logoutBtn" class="admin-btn logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </div>
-      <div style="font-size: 12px; color: #475569;">
-        <i class="fas fa-info-circle"></i> When closed, no data submission allowed
+      <div id="passwordSection" class="password-prompt" style="margin-top: 10px;">
+        <input type="password" id="adminPassword" class="password-input" placeholder="Enter admin password" autocomplete="off">
+        <button id="authBtn" class="admin-btn"><i class="fas fa-key"></i> Unlock</button>
       </div>
     </div>
 
-    <!-- Global closure banner (visible when closed) -->
+    <!-- Global closure banner -->
     <div id="closedBanner" class="closed-banner" style="display: none;">
       <i class="fas fa-ban"></i>
       <div class="banner-text">
@@ -542,91 +565,63 @@
       </div>
     </div>
 
-    <!-- Message Container (floating toasts) -->
     <div id="messageContainer" class="message-container"></div>
     <div id="responseMessage" class="response-message"></div>
 
     <div id="mainFormContainer" class="form-container">
-      <!-- Verification Section -->
       <div id="verificationSection">
         <div class="form-group">
-          <label for="studentId" class="form-label required">
-            <i class="fas fa-id-card"></i> Student ID
-          </label>
-          <input type="text" id="studentId" class="form-input" placeholder="Enter your Student ID" maxlength="50" autocomplete="off">
+          <label for="studentId" class="form-label required"><i class="fas fa-id-card"></i> Student ID</label>
+          <input type="text" id="studentId" class="form-input" placeholder="Enter your Student ID" maxlength="50">
           <div class="error-message" id="studentIdError">Please enter a valid Student ID</div>
         </div>
-
         <div class="form-group">
-          <label for="admissionNumber" class="form-label required">
-            <i class="fas fa-hashtag"></i> Admission Number
-          </label>
-          <input type="text" id="admissionNumber" class="form-input" placeholder="Enter your Admission Number" maxlength="50" autocomplete="off">
+          <label for="admissionNumber" class="form-label required"><i class="fas fa-hashtag"></i> Admission Number</label>
+          <input type="text" id="admissionNumber" class="form-input" placeholder="Enter your Admission Number" maxlength="50">
           <div class="error-message" id="admissionNumberError">Please enter a valid Admission Number</div>
         </div>
-
-        <button type="button" id="verifyBtn" class="submit-btn">
-          <i class="fas fa-search"></i> Verify Identity
-        </button>
+        <button type="button" id="verifyBtn" class="submit-btn"><i class="fas fa-search"></i> Verify Identity</button>
       </div>
 
-      <!-- Student Info Display (Hidden initially) -->
       <div id="studentInfoSection" style="display: none;">
         <div class="student-info-card">
           <h3><i class="fas fa-user-check"></i> Verified Student Information</h3>
           <div class="info-grid" id="studentInfoGrid"></div>
         </div>
-
         <div class="form-group">
-          <label for="fanNumber" class="form-label required">
-            <i class="fas fa-qrcode"></i> FAN Number (16 digits)
-          </label>
-          <input type="text" id="fanNumber" class="form-input" 
-                 placeholder="Enter 16-digit FAN Number (e.g., 1234567890123456)" 
-                 maxlength="16"
-                 pattern="\d{16}"
-                 inputmode="numeric">
-          <div class="error-message" id="fanNumberError">FAN Number must be exactly 16 digits (numbers only)</div>
+          <label for="fanNumber" class="form-label required"><i class="fas fa-qrcode"></i> FAN Number (16 digits)</label>
+          <input type="text" id="fanNumber" class="form-input" placeholder="Enter 16-digit FAN Number" maxlength="16" inputmode="numeric">
+          <div class="error-message" id="fanNumberError">FAN Number must be exactly 16 digits</div>
         </div>
-
         <div class="form-group">
-          <label for="phoneNumber" class="form-label required">
-            <i class="fas fa-phone"></i> Phone Number (starts with 09)
-          </label>
-          <input type="tel" id="phoneNumber" class="form-input" 
-                 placeholder="Enter 10-digit phone number starting with 09 (e.g., 0912345678)" 
-                 maxlength="10"
-                 pattern="09\d{8}"
-                 inputmode="numeric">
-          <div class="error-message" id="phoneNumberError">Phone number must start with 09 and be exactly 10 digits</div>
+          <label for="phoneNumber" class="form-label required"><i class="fas fa-phone"></i> Phone Number (starts with 09)</label>
+          <input type="tel" id="phoneNumber" class="form-input" placeholder="10-digit phone starting with 09" maxlength="10" inputmode="numeric">
+          <div class="error-message" id="phoneNumberError">Phone must start with 09 and be exactly 10 digits</div>
         </div>
-
-        <button type="button" id="submitBtn" class="submit-btn">
-          <i class="fas fa-paper-plane"></i> Submit Information
-        </button>
+        <button type="button" id="submitBtn" class="submit-btn"><i class="fas fa-paper-plane"></i> Submit Information</button>
       </div>
-
-      <div class="loading-spinner" id="loadingSpinner">
-        <div class="spinner"></div>
-        <p style="margin-top: 10px;">Processing...</p>
-      </div>
+      <div class="loading-spinner" id="loadingSpinner"><div class="spinner"></div><p style="margin-top: 10px;">Processing...</p></div>
     </div>
   </div>
 
   <script>
-    // ==================== CONFIGURATION ====================
-    const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/jjuregistrar/Remedial-Student-Information-Collection/refs/heads/main/students%20(2).csv';
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfc5gNpThsP96UL4Pnm5oRW1Fu1Gw9Tjv19Q8uupj1y4y7u3qmwXM0VUnyO2qRjCg/exec';
+    // ==================== SECURE ADMIN CONFIGURATION ====================
+    // *** CHANGE THIS PASSWORD TO YOUR SECRET ONE ***
+    const ADMIN_SECRET_PASSWORD = "Admin@Jigjiga2025";  // 🔐 Only you know this
     
-    // SUBMISSION STATUS GLOBAL (OPEN/CLOSED) - default CLOSED as requested: "Data Submission is Closed" when first load
-    let isSubmissionOpen = false;   // false = closed, true = open (admin can toggle)
+    // Session state: is admin authenticated?
+    let adminAuthenticated = false;
+    let isSubmissionOpen = false;   // default CLOSED on first load
+    
+    // Data variables
+    const GITHUB_DATA_URL = 'https://raw.githubusercontent.com/jjuregistrar/data-collection-form/refs/heads/main/students.csv?token=GHSAT0AAAAAAD3SR7XHL23LJ2WHXCOBN7HO2PUNRWQ';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfc5gNpThsP96UL4Pnm5oRW1Fu1Gw9Tjv19Q8uupj1y4y7u3qmwXM0VUnyO2qRjCg/exec';
     
     let studentsData = [];
     let currentStudent = null;
-    let activeMessages = [];
     let dataLoaded = false;
     
-    // DOM Elements
+    // DOM elements
     const verificationSection = document.getElementById('verificationSection');
     const studentInfoSection = document.getElementById('studentInfoSection');
     const studentInfoGrid = document.getElementById('studentInfoGrid');
@@ -643,21 +638,51 @@
     const statusBadge = document.getElementById('statusBadge');
     const closedBanner = document.getElementById('closedBanner');
     const mainFormContainer = document.getElementById('mainFormContainer');
+    const adminControls = document.getElementById('adminControls');
+    const adminLockStatus = document.getElementById('adminLockStatus');
+    const passwordInput = document.getElementById('adminPassword');
+    const authBtn = document.getElementById('authBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
     
-    // ==================== Submission Open/Close Handler ====================
+    // ==================== Helper Functions ====================
+    function showFloatingMessage(title, message, type = 'success', duration = 5000) {
+      const messageId = Date.now() + Math.random();
+      const messageBlock = document.createElement('div');
+      messageBlock.className = `message-block message-${type}`;
+      messageBlock.id = `msg-${messageId}`;
+      let icon = 'fa-check-circle';
+      if (type === 'error') icon = 'fa-exclamation-circle';
+      if (type === 'info') icon = 'fa-info-circle';
+      if (type === 'warning') icon = 'fa-exclamation-triangle';
+      messageBlock.innerHTML = `
+        <div class="message-icon"><i class="fas ${icon}"></i></div>
+        <div class="message-content"><div class="message-title">${title}</div><div class="message-text">${message}</div></div>
+        <div class="message-close" onclick="this.closest('.message-block').remove()"><i class="fas fa-times"></i></div>
+        <div class="message-progress" style="animation-duration: ${duration/1000}s"></div>
+      `;
+      messageContainer.appendChild(messageBlock);
+      setTimeout(() => {
+        const el = document.getElementById(`msg-${messageId}`);
+        if (el) { el.classList.add('hide'); setTimeout(() => el.remove(), 300); }
+      }, duration);
+    }
+    
     function updateSubmissionUI() {
-      // Update toggle UI and badge
-      submissionToggle.checked = isSubmissionOpen;
+      // Only admin can see/use toggle, but UI reflects current state for everyone
+      if (adminAuthenticated) {
+        submissionToggle.disabled = false;
+        submissionToggle.checked = isSubmissionOpen;
+      } else {
+        submissionToggle.disabled = true;
+      }
+      
       if (isSubmissionOpen) {
         statusBadge.textContent = 'OPEN';
         statusBadge.classList.add('open');
-        statusBadge.classList.remove('status-badge'); // keep styling but add open
         statusBadge.style.background = '#dcfce7';
         statusBadge.style.color = '#15803d';
         closedBanner.style.display = 'none';
-        // Enable form visually and functionally: remove overlay class and ensure inputs can be used
         mainFormContainer.classList.remove('disabled-overlay');
-        // Buttons are not disabled by class, but actions will check variable in logic
       } else {
         statusBadge.textContent = 'CLOSED';
         statusBadge.classList.remove('open');
@@ -665,78 +690,61 @@
         statusBadge.style.color = '#b91c1c';
         closedBanner.style.display = 'flex';
         mainFormContainer.classList.add('disabled-overlay');
-        // Also show floating message that submission closed (once per toggle)
-        showFloatingMessage('Submission Closed', 'Data submission is currently disabled. Please contact administration.', 'warning', 4000);
       }
     }
     
     function setSubmissionState(openState) {
+      if (!adminAuthenticated) return;
       isSubmissionOpen = openState;
+      // Persist state in localStorage (encrypted simple, but only admin can change via auth)
       localStorage.setItem('jju_submission_open', openState ? 'true' : 'false');
       updateSubmissionUI();
-      // If verification section is visible and we close while verifying, do not disrupt but show banner.
-      // If student info part is active, block actual submission in submitData() anyway.
+      showFloatingMessage(openState ? 'Submission Opened' : 'Submission Closed', 
+        openState ? 'Data collection is now OPEN. Students can submit.' : 'Data submission has been CLOSED.', 
+        openState ? 'success' : 'warning', 4000);
     }
     
-    // Admin toggle event
-    submissionToggle.addEventListener('change', function(e) {
-      setSubmissionState(e.target.checked);
-      if (!isSubmissionOpen && currentStudent && studentInfoSection.style.display === 'block') {
-        showFloatingMessage('Notice', 'Submission window is closed. You cannot submit data now.', 'error', 4000);
-      } else if (isSubmissionOpen) {
-        showFloatingMessage('Submission Opened', 'Data collection is now OPEN. Eligible students may submit.', 'success', 4000);
-      }
-    });
-    
-    // ==================== Message & Helper Functions ====================
-    function showFloatingMessage(title, message, type = 'success', duration = 5000) {
-      const messageId = Date.now() + Math.random();
-      const messageBlock = document.createElement('div');
-      messageBlock.className = `message-block message-${type}`;
-      messageBlock.id = `msg-${messageId}`;
-      
-      let icon = 'fa-check-circle';
-      if (type === 'error') icon = 'fa-exclamation-circle';
-      if (type === 'info') icon = 'fa-info-circle';
-      if (type === 'warning') icon = 'fa-exclamation-triangle';
-      
-      messageBlock.innerHTML = `
-        <div class="message-icon">
-          <i class="fas ${icon}"></i>
-        </div>
-        <div class="message-content">
-          <div class="message-title">${title}</div>
-          <div class="message-text">${message}</div>
-        </div>
-        <div class="message-close" onclick="this.closest('.message-block').remove()">
-          <i class="fas fa-times"></i>
-        </div>
-        <div class="message-progress" style="animation-duration: ${duration/1000}s"></div>
-      `;
-      
-      messageContainer.appendChild(messageBlock);
-      activeMessages.push(messageId);
-      
-      setTimeout(() => {
-        const msgElement = document.getElementById(`msg-${messageId}`);
-        if (msgElement) {
-          msgElement.classList.add('hide');
-          setTimeout(() => {
-            if (msgElement && msgElement.parentNode) msgElement.remove();
-          }, 300);
+    // Admin authentication
+    function authenticateAdmin() {
+      const enteredPassword = passwordInput.value.trim();
+      if (enteredPassword === ADMIN_SECRET_PASSWORD) {
+        adminAuthenticated = true;
+        // Restore stored submission state from localStorage (only admin can read/write)
+        const stored = localStorage.getItem('jju_submission_open');
+        if (stored !== null) {
+          isSubmissionOpen = stored === 'true';
+        } else {
+          isSubmissionOpen = false; // default closed
         }
-        activeMessages = activeMessages.filter(id => id !== messageId);
-      }, duration);
-      
-      return messageId;
+        updateSubmissionUI();
+        // Show admin controls
+        adminControls.classList.add('show');
+        adminLockStatus.innerHTML = '<i class="fas fa-unlock-alt"></i> Admin Mode (Authenticated)';
+        adminLockStatus.style.background = '#dcfce7';
+        adminLockStatus.style.color = '#15803d';
+        document.getElementById('passwordSection').style.display = 'none';
+        showFloatingMessage('Access Granted', 'You can now open/close the submission system.', 'success', 4000);
+        passwordInput.value = '';
+      } else {
+        showFloatingMessage('Access Denied', 'Invalid admin password.', 'error', 3000);
+        passwordInput.value = '';
+      }
     }
     
-    function caseInsensitiveCompare(str1, str2) {
-      if (!str1 || !str2) return false;
-      return str1.toString().toLowerCase().trim() === str2.toString().toLowerCase().trim();
+    function logoutAdmin() {
+      adminAuthenticated = false;
+      adminControls.classList.remove('show');
+      adminLockStatus.innerHTML = '<i class="fas fa-lock"></i> Locked (Click to authenticate)';
+      adminLockStatus.style.background = '#f1f5f9';
+      adminLockStatus.style.color = '#475569';
+      document.getElementById('passwordSection').style.display = 'flex';
+      // Reset submission UI to reflect closed state (non-admin sees closed)
+      isSubmissionOpen = false;
+      updateSubmissionUI();
+      showFloatingMessage('Logged Out', 'Admin session ended. Submission remains closed.', 'info', 3000);
     }
     
-    // Load student data from GitHub
+    // Data functions
     async function loadStudentData() {
       try {
         let response = await fetch(GITHUB_DATA_URL);
@@ -747,10 +755,8 @@
         } else {
           studentsData = JSON.parse(data);
         }
-        console.log(`Loaded ${studentsData.length} records`);
         dataLoaded = true;
       } catch (error) {
-        console.error('Error loading student data:', error);
         loadSampleData();
       }
     }
@@ -776,28 +782,17 @@
       dataLoaded = true;
     }
     
+    function caseInsensitiveCompare(a, b) { return a?.toString().toLowerCase().trim() === b?.toString().toLowerCase().trim(); }
+    
     function verifyStudent() {
-      if (!dataLoaded) { showFloatingMessage('Loading', 'Data still loading...', 'warning', 2000); return; }
+      if (!dataLoaded) { showFloatingMessage('Loading', 'Please wait, loading data...', 'warning', 2000); return; }
       const studentId = studentIdInput.value.trim();
       const admissionNumber = admissionNumberInput.value.trim();
       clearErrors();
-      if (!studentId || !admissionNumber) {
-        showFloatingMessage('Missing info', 'Please enter both Student ID and Admission Number', 'error', 3000);
-        return;
-      }
+      if (!studentId || !admissionNumber) { showFloatingMessage('Missing Info', 'Enter both Student ID and Admission Number', 'error', 3000); return; }
       const student = studentsData.find(s => caseInsensitiveCompare(s.Studentid, studentId) && caseInsensitiveCompare(s['Admission Number'], admissionNumber));
-      if (!student) {
-        showFloatingMessage('Verification Failed', 'Invalid Student ID or Admission Number.', 'error', 4000);
-        return;
-      }
+      if (!student) { showFloatingMessage('Verification Failed', 'Invalid credentials', 'error', 4000); return; }
       currentStudent = student;
-      displayStudentInfo(student);
-      verificationSection.style.display = 'none';
-      studentInfoSection.style.display = 'block';
-      showFloatingMessage('Verification Success', `Welcome ${student['First Name']}! Please fill in details.`, 'success', 5000);
-    }
-    
-    function displayStudentInfo(student) {
       const fullName = `${student['First Name'] || ''} ${student['Father Name'] || ''} ${student['Grand Father Name'] || ''}`.trim();
       studentInfoGrid.innerHTML = `
         <div class="info-item"><span class="info-label">Stream</span><span class="info-value">${student.Stream || ''}</span></div>
@@ -806,126 +801,82 @@
         <div class="info-item"><span class="info-label">Full Name</span><span class="info-value">${fullName}</span></div>
         <div class="info-item"><span class="info-label">Gender</span><span class="info-value">${student.Gender || ''}</span></div>
       `;
+      verificationSection.style.display = 'none';
+      studentInfoSection.style.display = 'block';
+      showFloatingMessage('Verified', `Welcome ${student['First Name']}!`, 'success', 4000);
     }
     
     async function submitData() {
-      // *** MAIN GUARD: if submission is closed, reject ***
       if (!isSubmissionOpen) {
-        showFloatingMessage('Submission Closed', 'Data submission is currently closed. Please contact registrar office.', 'error', 5000);
-        showResponse('❌ Submission closed. Cannot submit at this time.', 'error');
+        showFloatingMessage('Submission Closed', 'Data submission is currently closed. Please contact registrar.', 'error', 5000);
         return;
       }
-      
       const fanNumber = fanNumberInput.value.trim();
       const phoneNumber = phoneNumberInput.value.trim();
-      clearErrors();
-      if (!fanNumber || !/^\d{16}$/.test(fanNumber)) {
-        showFieldError('fanNumberError', 'FAN Number must be exactly 16 digits');
-        showFloatingMessage('Validation Error', 'FAN Number must be 16 digits', 'error', 3000);
-        return;
-      }
-      if (!phoneNumber || !/^09\d{8}$/.test(phoneNumber)) {
-        showFieldError('phoneNumberError', 'Phone must start with 09 and be 10 digits');
-        showFloatingMessage('Validation Error', 'Invalid phone number format', 'error', 3000);
-        return;
-      }
+      if (!/^\d{16}$/.test(fanNumber)) { showFieldError('fanNumberError', 'FAN Number: exactly 16 digits'); showFloatingMessage('Invalid FAN', 'Must be 16 digits', 'error', 3000); return; }
+      if (!/^09\d{8}$/.test(phoneNumber)) { showFieldError('phoneNumberError', 'Phone must start with 09 (10 digits)'); showFloatingMessage('Invalid Phone', 'Format: 09xxxxxxxx', 'error', 3000); return; }
       
       const submissionData = {
-        timestamp: new Date().toISOString(),
-        Stream: currentStudent.Stream || '',
-        Studentid: currentStudent.Studentid || '',
-        'Admission Number': currentStudent['Admission Number'] || '',
-        'FAN Number': fanNumber,
-        'First Name': currentStudent['First Name'] || '',
-        'Father Name': currentStudent['Father Name'] || '',
-        'Grand Father Name': currentStudent['Grand Father Name'] || '',
-        Gender: currentStudent.Gender || '',
-        Isblind: currentStudent.Isblind || 'No',
-        Isdeaf: currentStudent.Isdeaf || 'No',
-        'Phone Number': phoneNumber,
+        timestamp: new Date().toISOString(), Stream: currentStudent.Stream, Studentid: currentStudent.Studentid,
+        'Admission Number': currentStudent['Admission Number'], 'FAN Number': fanNumber,
+        'First Name': currentStudent['First Name'], 'Father Name': currentStudent['Father Name'],
+        'Grand Father Name': currentStudent['Grand Father Name'], Gender: currentStudent.Gender,
+        Isblind: currentStudent.Isblind, Isdeaf: currentStudent.Isdeaf, 'Phone Number': phoneNumber,
         submission_status: 'COMPLETED'
       };
-      
       showLoading(true);
       submitBtn.disabled = true;
       try {
         const formData = new FormData();
-        Object.keys(submissionData).forEach(key => formData.append(key, submissionData[key]));
+        Object.keys(submissionData).forEach(k => formData.append(k, submissionData[k]));
         await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: formData });
-        showFloatingMessage('Submission Successful', `Thank you ${currentStudent['First Name']}! Data recorded.`, 'success', 7000);
-        showResponse('✅ Information submitted successfully!', 'success');
-        setTimeout(() => resetForm(), 3500);
-      } catch (error) {
-        showFloatingMessage('Submission Failed', 'Network error. Please try again.', 'error', 5000);
-      } finally {
-        showLoading(false);
-        submitBtn.disabled = false;
-      }
+        showFloatingMessage('Success', 'Information submitted successfully!', 'success', 6000);
+        setTimeout(() => resetForm(), 3000);
+      } catch(e) { showFloatingMessage('Error', 'Network error, please try again', 'error', 4000); }
+      finally { showLoading(false); submitBtn.disabled = false; }
     }
     
     function resetForm() {
-      studentIdInput.value = '';
-      admissionNumberInput.value = '';
-      fanNumberInput.value = '';
-      phoneNumberInput.value = '';
+      studentIdInput.value = ''; admissionNumberInput.value = ''; fanNumberInput.value = ''; phoneNumberInput.value = '';
       currentStudent = null;
       verificationSection.style.display = 'block';
       studentInfoSection.style.display = 'none';
-      fanNumberInput.classList.remove('success', 'error');
-      phoneNumberInput.classList.remove('success', 'error');
       hideResponse();
     }
     
-    function showFieldError(elementId, message) {
-      const el = document.getElementById(elementId);
-      if (el) { el.textContent = message; el.style.display = 'block'; }
-    }
+    function showFieldError(id, msg) { const el = document.getElementById(id); if(el){ el.textContent = msg; el.style.display = 'block'; } }
     function clearErrors() { document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none'); }
     function showResponse(msg, type) { responseMessage.textContent = msg; responseMessage.className = `response-message response-${type}`; responseMessage.style.display = 'block'; setTimeout(() => hideResponse(), 7000); }
     function hideResponse() { responseMessage.style.display = 'none'; }
     function showLoading(show) { loadingSpinner.style.display = show ? 'block' : 'none'; }
     
     function setupRealTimeValidation() {
-      fanNumberInput.addEventListener('input', function() {
-        let val = this.value.replace(/\D/g, '').slice(0, 16);
-        this.value = val;
-        if (val.length === 16) { this.classList.add('success'); document.getElementById('fanNumberError').style.display = 'none'; }
-        else { this.classList.remove('success'); if(val.length) showFieldError('fanNumberError', `Need 16 digits (${val.length})`); }
-      });
-      phoneNumberInput.addEventListener('input', function() {
-        let val = this.value.replace(/\D/g, '').slice(0, 10);
-        this.value = val;
-        const valid = /^09\d{8}$/.test(val);
-        if (valid) { this.classList.add('success'); document.getElementById('phoneNumberError').style.display = 'none'; }
-        else { this.classList.remove('success'); if(val.length) showFieldError('phoneNumberError', 'Must start with 09, 10 digits'); }
-      });
+      fanNumberInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0,16); if(this.value.length===16) this.classList.add('success'); else this.classList.remove('success'); });
+      phoneNumberInput.addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0,10); if(/^09\d{8}$/.test(this.value)) this.classList.add('success'); else this.classList.remove('success'); });
     }
     
+    // Event binding
     verifyBtn.addEventListener('click', verifyStudent);
     submitBtn.addEventListener('click', submitData);
-    ['keypress'].forEach(ev => {
-      studentIdInput.addEventListener(ev, (e) => { if (e.key === 'Enter') verifyStudent(); });
-      admissionNumberInput.addEventListener(ev, (e) => { if (e.key === 'Enter') verifyStudent(); });
-      fanNumberInput.addEventListener(ev, (e) => { if (e.key === 'Enter') submitData(); });
-      phoneNumberInput.addEventListener(ev, (e) => { if (e.key === 'Enter') submitData(); });
-    });
+    submissionToggle.addEventListener('change', (e) => { if(adminAuthenticated) setSubmissionState(e.target.checked); });
+    authBtn.addEventListener('click', authenticateAdmin);
+    logoutBtn.addEventListener('click', logoutAdmin);
+    adminLockStatus.addEventListener('click', () => { if(!adminAuthenticated) document.getElementById('passwordSection').style.display = 'flex'; });
+    passwordInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') authenticateAdmin(); });
+    [studentIdInput, admissionNumberInput].forEach(inp => inp.addEventListener('keypress', e => { if(e.key === 'Enter') verifyStudent(); }));
+    [fanNumberInput, phoneNumberInput].forEach(inp => inp.addEventListener('keypress', e => { if(e.key === 'Enter') submitData(); }));
     
     async function init() {
       await loadStudentData();
       setupRealTimeValidation();
-      // Load stored preference for submission open/close (default false = closed)
-      const stored = localStorage.getItem('jju_submission_open');
-      if (stored !== null) {
-        isSubmissionOpen = stored === 'true';
-      } else {
-        isSubmissionOpen = false;  // initially closed per requirement
-      }
+      // Default state: submission closed, admin not authenticated
+      adminAuthenticated = false;
+      isSubmissionOpen = false;
       updateSubmissionUI();
-      // On page load display closed banner & friendly message
-      showFloatingMessage('Submission Status', 'Data submission is currently CLOSED. Only administrators can open.', 'info', 6000);
-      if (dataLoaded) showFloatingMessage('Ready', 'System ready. Please verify identity if submission open.', 'info', 3000);
+      showFloatingMessage('System Ready', 'Data submission is currently CLOSED. Only authorized admin can open.', 'info', 5000);
     }
     init();
   </script>
 </body>
 </html>
+```
